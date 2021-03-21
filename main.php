@@ -39,7 +39,8 @@ final class OriginalMailField{
   /*
 		form rooting  customer side
   */
-   
+    global $wp_query;
+    $this_post_id = $wp_query->get_queried_object_id();
 
 
     if(!empty($_POST['onamae']) && !empty($_POST['token']) && $_POST['token']==$_SESSION['mf']['token'] && $_POST['sub']=='確認へ'){
@@ -55,13 +56,13 @@ final class OriginalMailField{
       // CSRF対策
       $_SESSION['mf']['csrf'] = self::token();
       echo '
-        <form enctype="multipart/form-data">
+        <form method="post" action="/?page_id='.$this_post_id.'" enctype="multipart/form-data">
         <input type="hidden" name="token" value="'.$_SESSION['mf']['csrf'].'">
         <p> <input type="submit" name="submit" value="送信">
         </form>
       ';
 
-    }elseif( !empty($_SESSION['mf']['toiawase_post']) && !empty($_GET['token']) && $_GET['token'] == $_SESSION['mf']['csrf'] ){
+    }elseif( !empty($_SESSION['mf']['toiawase_post']) && !empty($_POST['token']) && $_POST['token'] == $_SESSION['mf']['csrf'] ){
       // 送信完了
       $post = $_SESSION['mf']['toiawase_post'];
 
@@ -75,18 +76,17 @@ final class OriginalMailField{
 
         $body .= $key .' : '. $value ."\r\n";
       }
-
-      wp_mail( $to , $subject, $body, $headers );
+      $ress = wp_mail( $to , $subject, $body, $headers );
+      var_dump($to , $subject, $body, $headers,$ress );
 
       $_SESSION['mf'] = array();
       echo "<p>", $subject ,"<pre>", $body ,"</pre>";
 
     }else{
-      
      // CSRF対策
      $_SESSION['mf']['token'] = self::token();
      $html = '
-    <form method="post" action="/library/inquiry.html" enctype="multipart/form-data">
+    <form method="post" action="/?page_id='.$this_post_id.'" enctype="multipart/form-data">
     <p><input type="text" name="onamae" class="onamae" size="33" maxlength="33" value="" placeholder="お名前 your name" require>
     <p> <input type="email" name="email" class="email" size="33" value="" placeholder="メールアドレス email" require >
     <p> <textarea name="comment" cols="33" rows="5" placeholder="お問い合わせ内容"></textarea>
